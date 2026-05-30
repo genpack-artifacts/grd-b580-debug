@@ -1,0 +1,94 @@
+{
+    // Slim artifact dedicated to investigating the Arc B580 + iHD/anv crash
+    // documented in tachikoma/Intel-Arc-B580-GRD-anv-crash-with-iHD.md.
+    //
+    // Boots stock GRD (no local patches) and reproduces the segfault that
+    // happens whenever ``libva-intel-media-driver`` is probe-loadable.
+    // Mesa / GRD / PipeWire are rebuilt with ``-ggdb3`` + ``splitdebug`` +
+    // ``installsources`` so that coredumpctl gdb on the affected machine
+    // gives a symbolised backtrace with source lines. ``dev-util/claude-code``
+    // is included so the investigation can be driven by an agent running
+    // on the target itself.
+    name: "grd-b580-debug",
+    profile: "gnome/baremetal",
+    compression: "xz",
+
+    binpkg_excludes: [
+        // Do not pull pre-stripped binpkgs from the shared cache AND do not
+        // push debug-symbol binpkgs back into it. ``binpkg_excludes`` covers
+        // both directions (--usepkg-exclude / --buildpkg-exclude).
+        "media-libs/mesa",
+        "net-misc/gnome-remote-desktop",
+        "media-video/pipewire",
+    ],
+
+    packages: [
+        // Bare-metal boot. No bcachefs needed here so ``gentoo-kernel-bin``
+        // is enough and skips the source kernel build.
+        "sys-kernel/gentoo-kernel-bin",
+        // Crash reproducer pieces.
+        "net-misc/gnome-remote-desktop",
+        "media-libs/libva-intel-media-driver", // the iHD that triggers anv NULL deref
+        // In-situ diagnostics.
+        "dev-debug/gdb",
+        "dev-util/claude-code",
+        "media-video/libva-utils",
+        "sys-apps/inxi", // for filling System information in upstream bug reports
+        // (media-libs/mesa, media-video/pipewire come from the gnome/baremetal profile)
+    ],
+
+    accept_keywords: {
+        "sys-kernel/linux-firmware": null,
+        "net-misc/gnome-remote-desktop": null,
+        "media-libs/libva-intel-media-driver": null,
+        "media-libs/libvpl": null,
+        "media-libs/gmmlib": null,
+        "media-libs/mesa": null,
+        "dev-util/mesa_clc": null,
+    },
+
+    use: {
+        "media-libs/mesa": "vulkan vaapi VIDEO_CARDS: intel",
+        "media-video/pipewire": "gsettings sound-server",
+        "x11-wm/mutter": "screencast",
+        "gnome-base/gnome-shell": "pipewire",
+        "media-libs/freetype": "harfbuzz",
+        "dev-util/claude-code": "CPU_FLAGS_X86: avx avx2",
+        "net-libs/ngtcp2": "gnutls",
+    },
+
+    license: {
+        "sys-kernel/linux-firmware": "linux-fw-redistributable",
+        "media-libs/libva-intel-media-driver": "no-source-code",
+        "dev-util/claude-code": "all-rights-reserved",
+    },
+
+    env: {
+        "media-libs/mesa": "genpack-debug.conf",
+        "net-misc/gnome-remote-desktop": "genpack-debug.conf",
+        "media-video/pipewire": "genpack-debug.conf",
+    },
+
+    circulardep_breaker: {
+        // Same set as the main gnome artifact; gnome/baremetal profile pulls
+        // the same circular pairs (freetype/harfbuzz, glib, etc).
+        packages: ["media-libs/freetype", "media-libs/harfbuzz", "dev-libs/glib", "media-libs/tiff", "media-libs/libwebp"],
+        use: "-truetype -harfbuzz -cairo -sysprof -webp -tiff",
+    },
+
+    users: [
+        {
+            name: "user",
+            uid: 1000,
+            "empty-password": true,
+            "additional-groups": [
+                "wheel",
+                "audio",
+                "video",
+                "input",
+            ],
+        },
+    ],
+
+    services: ["gdm", "NetworkManager"],
+}

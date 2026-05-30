@@ -1,0 +1,7 @@
+/work/
+/*.squashfs
+/*.img
+/*.tmp
+/*.iso
+/*.tar.gz
+/.vscode/

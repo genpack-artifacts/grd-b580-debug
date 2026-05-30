@@ -1,0 +1,3 @@
+#!/bin/sh
+set -e
+sed -i '/\[daemon\]/a AutomaticLoginEnable=true\nAutomaticLogin=user' /etc/gdm/custom.conf
