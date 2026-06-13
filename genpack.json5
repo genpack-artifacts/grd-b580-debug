@@ -69,13 +69,6 @@
         "media-video/pipewire": "genpack-debug.conf",
     },
 
-    circulardep_breaker: {
-        // Same set as the main gnome artifact; gnome/baremetal profile pulls
-        // the same circular pairs (freetype/harfbuzz, glib, etc).
-        packages: ["media-libs/freetype", "media-libs/harfbuzz", "dev-libs/glib", "media-libs/tiff", "media-libs/libwebp"],
-        use: "-truetype -harfbuzz -cairo -sysprof -webp -tiff",
-    },
-
     users: [
         {
             name: "user",
