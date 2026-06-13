@@ -53,7 +53,6 @@
         "x11-wm/mutter": "screencast",
         "gnome-base/gnome-shell": "pipewire",
         "media-libs/freetype": "harfbuzz",
-        "dev-util/claude-code": "CPU_FLAGS_X86: avx avx2",
         "net-libs/ngtcp2": "gnutls",
     },
 
